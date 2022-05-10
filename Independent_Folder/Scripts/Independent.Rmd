@@ -1,0 +1,305 @@
+---
+title: "Independent Project"
+author: "Brandon Bonilla"
+date: "5/2/2022"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.path = "../Output/")
+
+```
+
+## Introduction
+
+The aim of my independent project was to apply what I have learned in class to areas of data analysis that interest me. Sports is a field that heavily relies on data. Data is especially prominent in the case of the Olympics, which incorporates different countries competing throughout history. Many people take pride in the amount of success their country, or an individual athlete see at this stage. We will be taking a look at the two most historically dominant countries in the Olympics, and compare them in the sports they succeed in most. In addition, we will compare male and female athletes of these countries to see if there is any edge between them. 
+
+## Load Libraries
+
+```{r}
+library(tidyverse)
+library(here)
+library(kableExtra)
+library(ymlthis)
+library(dplyr)
+library(gganimate)
+library(patchwork)
+library(ggplot2)
+library(prettydoc)
+```
+
+## Load Data
+```{r}
+olympics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-07-27/olympics.csv')
+
+View(olympics)
+```
+
+## Data Analysis: USA & USSR
+
+```{r}
+GoldEverything<-olympics%>%
+  filter(medal == "Gold")
+view(GoldEverything)
+
+Summer<-olympics%>%
+  filter(season == "Summer")
+view(Summer)
+
+USAGoldSummer<-olympics%>%
+  filter(season == "Summer",
+         medal == "Gold",
+         team == "United States",
+         sport == "Basketball",
+         year >= "1984")%>%
+  select(name, sex, team, year, games, sport, event, medal)%>%
+  rename("Name" = name,
+         "Sex"=sex,
+         "Team"=team,
+         "Games" =games,
+         "Sport"=sport,
+         "Event"=event,
+         "Medal"=medal,
+         "Year"=year)
+view(USAGoldSummer)
+
+USAGoldSummerD<-USAGoldSummer%>%
+  arrange(desc(Year))
+
+RussiaGold<-olympics%>%
+  filter(medal == "Gold",
+         team == "Russia")
+view(RussiaGold)
+
+USSRGold<-olympics%>%
+  filter(medal == "Gold",
+         team == "Soviet Union")
+view(USSRGold)
+
+USSRGoldSummer<-olympics%>%
+  filter(season == "Summer",
+         medal == "Gold",
+         team == "Soviet Union",
+         sport == "Gymnastics",
+         year<= "1980")%>%
+  select(name, sex, team, year, games, sport, event, medal)%>%
+  rename("Name" = name,
+         "Sex"=sex,
+         "Team"=team,
+         "Games" =games,
+         "Sport"=sport,
+         "Event"=event,
+         "Medal"=medal,
+         "Year"=year)
+view(USSRGoldSummer)
+
+USSRGoldSummerD<-USSRGoldSummer%>%
+  arrange(desc(Year))
+
+```
+
+## Table 1. Team USA Basketball
+```{r}
+Table1<-USAGoldSummerD%>%
+  group_by(Name, Sex)%>%
+  kbl(caption = "Team USA Basketball Gold Medalists")%>%
+  kable_material_dark(c("striped"), 
+                full_width = FALSE, fixed_thead = T, position = "center", 
+                font_size = 12) %>%
+    row_spec(0, bold = T, color = "black", background = "blue")%>%
+  row_spec(1:179, color = "black", background = "grey")
+ Table1
+
+```
+
+## Figure 1. Team USA Best Era
+```{r, USAplot,fig.align='center'}
+USAplot<-USAGoldSummerD%>%
+  ggplot( aes(x = Year,
+            y = Medal))+
+  geom_dotplot(fill = 'gold')+
+  labs(title = "USA Dominance in Basketball")+
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.border = element_rect(fill = NA,
+                                    color = "blue"))
+USAplot
+```
+
+## Table 2. Team USSR Gymnastics
+```{r}
+Table2<-USSRGoldSummerD%>%
+  group_by(Name, Sex)%>%
+  kbl(caption = "Team Soviet Union Gymastics Gold Medalists")%>%
+  kable_material_dark(c("striped"), 
+                full_width = FALSE, fixed_thead = T, position = "center", 
+                font_size = 12) %>%
+  row_spec(0, bold = T, color = "black", background = "red")%>%
+  row_spec(1:120, color ="black", background = "grey")
+Table2
+```
+
+## Figure 2. Team USSR Best Era
+```{r,USSRplot, fig.align='center'}
+USSRplot<-USSRGoldSummerD%>%
+  ggplot( aes(x = Year,
+            y = Medal))+
+  geom_dotplot(fill = 'gold')+
+  labs(title = "USSR Dominance in Gymnastics")+
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.border = element_rect(fill = NA,
+                                    color = "red"))
+USSRplot
+```
+
+## Figure 3. Comparisson of Dominant Eras
+```{r, CompareP, fig.align='center'}
+CompareP<-USAplot+USSRplot+
+  plot_layout(guides = 'collect')+
+  plot_annotation(tag_levels = 'A')
+
+CompareP
+```
+
+## Data Analysis: USA Sexes
+```{r}
+USAMen<-olympics%>%
+  filter(season == "Summer",
+         sex=="M",
+         medal == "Gold",
+         team == "United States",
+         sport == "Basketball",
+         year >= "1984")%>%
+  select(name, sex, team, year, games, sport, event, medal)%>%
+  rename("Name" = name,
+         "Sex"=sex,
+         "Team"=team,
+         "Games" =games,
+         "Sport"=sport,
+         "Event"=event,
+         "Medal"=medal,
+         "Year"=year)
+view(USAMen)
+
+USAWomen<-olympics%>%
+  filter(season == "Summer",
+         sex=="F",
+         medal == "Gold",
+         team == "United States",
+         sport == "Basketball",
+         year >= "1984")%>%
+  select(name, sex, team, year, games, sport, event, medal)%>%
+  rename("Name" = name,
+         "Sex"=sex,
+         "Team"=team,
+         "Games" =games,
+         "Sport"=sport,
+         "Event"=event,
+         "Medal"=medal,
+         "Year"=year)
+view(USAWomen)
+```
+
+## Figure 4. USA Men vs Women
+```{r, mvf, fig.align='center'}
+USAmenp<-USAMen%>%
+  ggplot( aes(x = Year,
+            y = Medal))+
+  geom_dotplot(fill = 'gold')+
+  labs(title = "USA Men's Basketball Winners")+
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.border = element_rect(fill = NA,
+                                    color = "blue"))
+USAwomenp<-USAWomen%>%
+  ggplot( aes(x = Year,
+            y = Medal))+
+  geom_dotplot(fill = 'gold')+
+  labs(title = "USA Women's Basketball Winners")+
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.border = element_rect(fill = NA,
+                                    color = "pink"))
+mvf<-USAmenp+USAwomenp+
+  plot_layout(guides = 'collect')+
+  plot_annotation(tag_levels = 'A')
+
+mvf
+```
+
+## Data Analysis USSR Sexes
+```{r}
+USSRMen<-olympics%>%
+  filter(season == "Summer",
+         sex == "M",
+         medal == "Gold",
+         team == "Soviet Union",
+         sport == "Gymnastics",
+         year<= "1980")%>%
+  select(name, sex, team, year, games, sport, event, medal)%>%
+  rename("Name" = name,
+         "Sex"=sex,
+         "Team"=team,
+         "Games" =games,
+         "Sport"=sport,
+         "Event"=event,
+         "Medal"=medal,
+         "Year"=year)
+view(USSRMen)
+
+USSRWomen<-olympics%>%
+  filter(season == "Summer",
+         sex == "F",
+         medal == "Gold",
+         team == "Soviet Union",
+         sport == "Gymnastics",
+         year<= "1980")%>%
+  select(name, sex, team, year, games, sport, event, medal)%>%
+  rename("Name" = name,
+         "Sex"=sex,
+         "Team"=team,
+         "Games" =games,
+         "Sport"=sport,
+         "Event"=event,
+         "Medal"=medal,
+         "Year"=year)
+view(USSRWomen)
+```
+
+## Figure 5. USSR Men vs. Women
+```{r, mvfUSSR, fig.align='center'}
+USSRMP<-USSRMen%>%
+  ggplot( aes(x = Year,
+            y = Medal))+
+  geom_dotplot(fill = 'gold')+
+  labs(title = "USSR Men's Gymnastics Winners")+
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.border = element_rect(fill = NA,
+                                    color = "blue"))
+USSRWP<-USSRWomen%>%
+  ggplot( aes(x = Year,
+            y = Medal))+
+  geom_dotplot(fill = 'gold')+
+  labs(title = "USSR Women's Gymnastics Winners")+
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.border = element_rect(fill = NA,
+                                    color = "pink"))
+mvfUSSR<-USSRMP+USSRWP+
+  plot_layout(guides = 'collect')+
+  plot_annotation(tag_levels = 'A')
+
+mvfUSSR
+```
+### Extra Functions
+```{r}
+
+table(USAGoldSummerD['Sex'])
+
+table(RussiaGold['sport'])
+
+table(USSRGold['sport'])
+
+table(GoldEverything['team'])
+```
+
+
